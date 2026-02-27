@@ -6,6 +6,7 @@ public class Card extends ClickableRectangle {
     String suit;
     PImage img;
     boolean turned = false;
+    boolean isTop = false;
     private int clickableWidth = 30; // Width of the left sliver that is clickable
     private boolean selected = false;
     private int baseY;

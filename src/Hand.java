@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import processing.core.PApplet;
 
 public class Hand {
-    private ArrayList<Card> cards;
+    ArrayList<Card> cards;
     
     public Hand() {
         cards = new ArrayList<>();
@@ -11,6 +11,7 @@ public class Hand {
     
     public void addCard(Card card) {
         cards.add(card);
+        card.setTurned(true);
     }
     
     public void removeCard(Card card) {
