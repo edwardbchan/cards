@@ -5,17 +5,19 @@ import processing.core.PApplet;
 
 public class CardGame {
     // Core game components
-    ArrayList<Card> deck = new ArrayList<>();
-    Hand playerOneHand;
-    Hand playerTwoHand;
+    static ArrayList<Card> deck = new ArrayList<>();
+    static Hand playerOneHand;
+    static Hand playerTwoHand;
     ArrayList<Card> discardPile = new ArrayList<>();
     Card selectedCard;
     int selectedCardRaiseAmount = 15;
 
     // Game state
-    boolean playerOneTurn = true;
-    Card lastPlayedCard;
+    static boolean playerOneTurn = true;
+    static Card lastPlayedCard;
     boolean gameActive;
+    public int flashTimer = 0;
+    public int flashDuration = 30;
 
     // UI
     ClickableRectangle drawButton;
@@ -113,9 +115,14 @@ public class CardGame {
         // Add to discard pile
         discardPile.add(card);
         lastPlayedCard = card;
+        triggerPlayFlash();
         // Switch turns
         switchTurns();
         return true;
+    }
+
+    public void triggerPlayFlash() {
+        flashTimer = flashDuration;
     }
 
     public void switchTurns() {

@@ -1,10 +1,12 @@
 import java.util.Collections;
 
 class ERS extends CardGame {
-    int count = 1;
-    int numTurns;
-    boolean mustPlayFaceCard;
-    boolean slappable;
+
+    static int count = 1;
+
+    static int numTurns = 0;
+
+    private int lastLetterPlayer = 0;
 
     @Override
     protected void dealCards(int numCards) {
@@ -40,63 +42,128 @@ class ERS extends CardGame {
 
     }
 
+    private boolean isLetterCard(Card card) {
+        String v = card.value;
+        return "J".equals(v) || "Q".equals(v) || "K".equals(v) || "A".equals(v);
+    }
+
+    private int turnsForLetter(Card card) {
+        switch (card.value) {
+            case "J":
+                return 1;
+            case "Q":
+                return 2;
+            case "K":
+                return 3;
+            case "A":
+                return 5;
+            default:
+                return 0;
+        }
+    }
+
+    private void collectDeckForLastLetterPlayer() {
+        if (lastLetterPlayer == 1) {
+            playerOneHand.getCards().addAll(0, deck);
+            playerOneTurn = true;
+        } else if (lastLetterPlayer == 2) {
+            playerTwoHand.getCards().addAll(0, deck);
+            playerOneTurn = false;
+        }
+        deck.clear();
+
+        count = 1;
+        numTurns = 0;
+    }
+
+    public static boolean slappable() {
+        if (deck.size() < 2) {
+            return false;
+        }
+
+        Card topCard = deck.get(deck.size() - 1);
+
+        // Check for a pair (double): last two cards have the same value
+        if (deck.size() >= 2) {
+            Card prevCard = deck.get(deck.size() - 2);
+            if (topCard.value.equals(prevCard.value)) {
+                return true;
+            }
+        }
+
+        // Check for a sandwich: top card matches the card two positions back
+        if (deck.size() >= 3) {
+            Card sandwichCard = deck.get(deck.size() - 3);
+            if (topCard.value.equals(sandwichCard.value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public boolean playCard(Card card, Hand hand) {
-        numTurns = count;
-        // Check if card is valid to play
+
         if (!isValidPlay(card)) {
             System.out.println("Invalid play: " + card.value + " of " + card.suit);
             return false;
         }
-        numTurns--;
-        hand.removeCard(card);
 
+        boolean currentIsP1 = playerOneTurn;
+
+        hand.removeCard(card);
         card.setTurned(false);
         deck.add(card);
-        if (card.value == "J") {
-            count = 1;
-            playerOneTurn = !playerOneTurn;
-            mustPlayFaceCard = true;
-        }
-        if (card.value == "Q") {
-            count = 2;
-            playerOneTurn = !playerOneTurn;
-            mustPlayFaceCard = true;
-        }
-        if (card.value == "K") {
-            count = 3;
-            playerOneTurn = !playerOneTurn;
-            mustPlayFaceCard = true;
-        }
-        if (card.value == "A") {
-            count = 4;
-            playerOneTurn = !playerOneTurn;
-            mustPlayFaceCard = true;
-        }
-        if (numTurns == 0&&playerOneTurn) {
-            playerOneTurn = !playerOneTurn;
-            for (Card c : deck) {
-                playerOneHand.getCards().add(0, c);
+        lastPlayedCard = card;
+        triggerPlayFlash();
+
+        if (isLetterCard(card)) {
+
+            lastLetterPlayer = currentIsP1 ? 1 : 2;
+            count = turnsForLetter(card);
+            numTurns = count;
+
+            switchTurns();
+        } else {
+            if (numTurns > 0) {
+
+                numTurns--;
+                if (numTurns == 0) {
+
+                    collectDeckForLastLetterPlayer();
+                    deck.clear();
+                } else {
+
+                    // keep the turn with the current player (do nothing)
+                }
+            } else {
+
+                switchTurns();
             }
-            deck.clear();
-            
         }
+
         return true;
     }
 
     @Override
     public void handleComputerTurn() {
-        numTurns = count;
+        if (slappable()) {
+            playerTwoHand.getCards().addAll(0, deck);
+            playerOneTurn = false;
+            deck.clear();
+            count = 1;
+            numTurns = count;
+            return;
+        }
         if (playerTwoHand.getSize() > 0) {
             playCard(playerTwoHand.getCard(playerTwoHand.getSize() - 1), playerTwoHand);
-            numTurns--;
             if (!deck.isEmpty()) {
                 deck.get(deck.size() - 1).isTop = true;
             }
-            playerTwoHand.getCard(playerTwoHand.getSize() - 1).isTop = true;
-        }
-        if (numTurns == 0) {
-            playerOneTurn = !playerOneTurn;
+            if (playerTwoHand.getSize() > 0) {
+                playerTwoHand.getCard(playerTwoHand.getSize() - 1).isTop = true;
+            }
         }
     }
 

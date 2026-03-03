@@ -4,6 +4,7 @@ public class App extends PApplet {
 
     CardGame cardGame = new ERS();
     private int timer;
+    String slap = "hello";
 
     public static void main(String[] args) {
         PApplet.main("App");
@@ -17,6 +18,13 @@ public class App extends PApplet {
     @Override
     public void draw() {
         background(255);
+        stroke (0);
+        text (slap, width/2+100, height/2);
+        if (ERS.slappable()) {
+            slap = "Slap!";
+        } else {
+            slap = "Not Slappable";
+        }
         // Draw player hands
         for (Card card : cardGame.playerOneHand.getCards()) {
             if (card.isTop) {
@@ -27,16 +35,16 @@ public class App extends PApplet {
         text("Cards:" + cardGame.playerOneHand.getSize(), 300, 580);
         text("Cards:" + cardGame.playerTwoHand.getSize(), 300, 40);
         for (Card card : cardGame.playerTwoHand.getCards()) {
-          //  if (card.isTop) {
-                card.setPosition(260, 50, 80, 120);
-                card.draw(this);
-          //  }
+            // if (card.isTop) {
+            card.setPosition(260, 50, 80, 120);
+            card.draw(this);
+            // }
         }
         for (Card card : cardGame.deck) {
-          //  if (card.isTop) {
-                card.setPosition(260, height / 2 - 60, 80, 120);
-                card.draw(this);
-          //  }
+            // if (card.isTop) {
+            card.setPosition(260, height / 2 - 60, 80, 120);
+            card.draw(this);
+            // }
         }
         // cardGame.playerOneHand.draw(this);
         // Draw computer hand
@@ -53,14 +61,31 @@ public class App extends PApplet {
         fill(0);
         textSize(16);
         text("Current Player: " + cardGame.getCurrentPlayer(), width / 2, 20);
+        text(ERS.numTurns, width / 2 + 100, 40);
+        text(ERS.count, width / 2 + 100, 60);
 
-        // Display deck size
         text("Deck Size: " + cardGame.getDeckSize(), width / 2 - 120,
                 height / 2);
         // Display last played card
         if (cardGame.getLastPlayedCard() != null) {
             cardGame.getLastPlayedCard().setPosition(width / 2 - 40, height / 2 - 60, 80, 120);
             cardGame.getLastPlayedCard().draw(this);
+        }
+       
+
+        if (cardGame.flashTimer > 0 && cardGame.getLastPlayedCard() != null) {
+            pushStyle();
+            float alpha = map(cardGame.flashTimer, 0, cardGame.flashDuration, 0, 255);
+            stroke(255, 0, 0, alpha);
+            noFill();
+            strokeWeight(6);
+            float cx = width / 2;
+            float cy = height / 2;
+          //  float maxR = 160;
+        //    float r = maxR * ((float) cardGame.flashTimer / cardGame.flashDuration);
+            ellipse(cx, cy, 160, 160);
+            popStyle();
+            cardGame.flashTimer--;
         }
         if (cardGame.getCurrentPlayer() == "Player Two") {
             fill(0);
@@ -77,9 +102,40 @@ public class App extends PApplet {
     }
 
     @Override
+    public void keyPressed() {
+        if (keyPressed && key == ' ') {
+            // pass current turn information into slap handler
+            handleSlap(cardGame.playerOneTurn);
+        }
+    }
+
+    @Override
     public void mousePressed() {
         cardGame.handleDrawButtonClick(mouseX, mouseY);
         cardGame.handleCardClick(mouseX, mouseY);
     }
 
+
+ 
+    public void handleSlap(boolean currentPlayerOne) {
+        if (ERS.slappable()) {
+            if (currentPlayerOne) {
+                ERS.playerOneHand.getCards().addAll(0, ERS.deck);
+                ERS.playerOneTurn = true;
+            } else {
+                ERS.playerTwoHand.getCards().addAll(0, ERS.deck);
+                ERS.playerOneTurn = false;
+            }
+        } else {
+            // failed slap gives deck to other player
+            if (currentPlayerOne) {
+                ERS.playerTwoHand.getCards().addAll(0, ERS.deck);
+                ERS.playerOneTurn = false;
+            } else {
+                ERS.playerOneHand.getCards().addAll(0, ERS.deck);
+                ERS.playerOneTurn = true;
+            }
+        }
+        ERS.deck.clear();
+    }
 }
