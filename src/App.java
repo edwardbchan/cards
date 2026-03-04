@@ -4,7 +4,9 @@ public class App extends PApplet {
 
     CardGame cardGame = new ERS();
     private int timer;
-    String slap = "hello";
+    private int slapTimer; // timer used specifically for computer slap reaction
+    static String slap = "hello";
+    static String win = "";
 
     public static void main(String[] args) {
         PApplet.main("App");
@@ -18,12 +20,20 @@ public class App extends PApplet {
     @Override
     public void draw() {
         background(255);
-        stroke (0);
-        text (slap, width/2+100, height/2);
+        stroke(0);
+        text(win, width / 2 + 150, height / 2 + 20);
+        text(slap, width / 2 + 150, height / 2);
         if (ERS.slappable()) {
             slap = "Slap!";
+
+            slapTimer++;
+            if (slapTimer >= 100) {
+                ((ERS) cardGame).handleComputerTurn();
+                slapTimer = 0;
+            }
         } else {
             slap = "Not Slappable";
+            slapTimer = 0;
         }
         // Draw player hands
         for (Card card : cardGame.playerOneHand.getCards()) {
@@ -39,6 +49,9 @@ public class App extends PApplet {
             card.setPosition(260, 50, 80, 120);
             card.draw(this);
             // }
+        }
+        if (cardGame.playerTwoHand.getSize() > 0) {
+            rect (260, 50, 80, 120);
         }
         for (Card card : cardGame.deck) {
             // if (card.isTop) {
@@ -66,12 +79,22 @@ public class App extends PApplet {
 
         text("Deck Size: " + cardGame.getDeckSize(), width / 2 - 120,
                 height / 2);
+
+        int totalCards = cardGame.playerOneHand.getSize() + cardGame.playerTwoHand.getSize()
+                + cardGame.getDeckSize();
+        if (totalCards > 0) {
+            if (cardGame.playerOneHand.getSize() == totalCards) {
+                win = "Player One wins the game!";
+            } else if (cardGame.playerTwoHand.getSize() == totalCards) {
+                win = "Player Two wins the game!";
+            }
+        }
+
         // Display last played card
         if (cardGame.getLastPlayedCard() != null) {
             cardGame.getLastPlayedCard().setPosition(width / 2 - 40, height / 2 - 60, 80, 120);
             cardGame.getLastPlayedCard().draw(this);
         }
-       
 
         if (cardGame.flashTimer > 0 && cardGame.getLastPlayedCard() != null) {
             pushStyle();
@@ -81,19 +104,20 @@ public class App extends PApplet {
             strokeWeight(6);
             float cx = width / 2;
             float cy = height / 2;
-          //  float maxR = 160;
-        //    float r = maxR * ((float) cardGame.flashTimer / cardGame.flashDuration);
+
             ellipse(cx, cy, 160, 160);
             popStyle();
             cardGame.flashTimer--;
         }
-        if (cardGame.getCurrentPlayer() == "Player Two") {
+
+        if (!CardGame.playerOneTurn) {
             fill(0);
             textSize(16);
             text("Computer is thinking...", width / 2, height / 2 + 80);
+
             timer++;
-            if (timer == 100) {
-                cardGame.handleComputerTurn();
+            if (timer >= 100) {
+                ((ERS) cardGame).handleComputerTurn();
                 timer = 0;
             }
         }
@@ -115,24 +139,26 @@ public class App extends PApplet {
         cardGame.handleCardClick(mouseX, mouseY);
     }
 
-
- 
     public void handleSlap(boolean currentPlayerOne) {
         if (ERS.slappable()) {
             if (currentPlayerOne) {
                 ERS.playerOneHand.getCards().addAll(0, ERS.deck);
                 ERS.playerOneTurn = true;
+                win = "Player One Gets " + ERS.deck.size() + " cards!";
             } else {
                 ERS.playerTwoHand.getCards().addAll(0, ERS.deck);
+                win = "Player Two Gets " + ERS.deck.size() + " cards!";
                 ERS.playerOneTurn = false;
             }
         } else {
-            // failed slap gives deck to other player
+
             if (currentPlayerOne) {
                 ERS.playerTwoHand.getCards().addAll(0, ERS.deck);
+                win = "Player Two Gets " + ERS.deck.size() + " cards!";
                 ERS.playerOneTurn = false;
             } else {
                 ERS.playerOneHand.getCards().addAll(0, ERS.deck);
+                win = "Player One Gets " + ERS.deck.size() + " cards!";
                 ERS.playerOneTurn = true;
             }
         }

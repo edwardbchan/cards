@@ -65,9 +65,11 @@ class ERS extends CardGame {
     private void collectDeckForLastLetterPlayer() {
         if (lastLetterPlayer == 1) {
             playerOneHand.getCards().addAll(0, deck);
+            App.win = "Player One Gets " + ERS.deck.size() + " cards!";
             playerOneTurn = true;
         } else if (lastLetterPlayer == 2) {
             playerTwoHand.getCards().addAll(0, deck);
+            App.win = "Player Two Gets " + ERS.deck.size() + " cards!";
             playerOneTurn = false;
         }
         deck.clear();
@@ -104,7 +106,7 @@ class ERS extends CardGame {
 
     @Override
     public boolean playCard(Card card, Hand hand) {
-
+        App.win = "";
         if (!isValidPlay(card)) {
             System.out.println("Invalid play: " + card.value + " of " + card.suit);
             return false;
@@ -149,14 +151,14 @@ class ERS extends CardGame {
     @Override
     public void handleComputerTurn() {
         if (slappable()) {
+            App.win = "Player Two Gets " + ERS.deck.size() + " cards!";
             playerTwoHand.getCards().addAll(0, deck);
             playerOneTurn = false;
             deck.clear();
             count = 1;
             numTurns = count;
             return;
-        }
-        if (playerTwoHand.getSize() > 0) {
+        } else if (playerTwoHand.getSize() > 0) {
             playCard(playerTwoHand.getCard(playerTwoHand.getSize() - 1), playerTwoHand);
             if (!deck.isEmpty()) {
                 deck.get(deck.size() - 1).isTop = true;
